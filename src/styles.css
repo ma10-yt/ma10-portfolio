@@ -4953,3 +4953,62 @@ a {
 
   letter-spacing: 0.08em;
 }
+/* ==================================================
+   RICH TEXT IMAGE UPLOAD
+================================================== */
+
+.image-toolbar-button {
+  min-width: 58px;
+}
+
+.rich-text-upload-message {
+  padding:
+    8px 12px;
+
+  border-bottom:
+    1px solid
+    rgba(122, 172, 255, 0.08);
+
+  color: #7899b8;
+
+  background:
+    rgba(45, 132, 245, 0.025);
+
+  font-size: 0.67rem;
+
+  line-height: 1.4;
+}
+/* ==================================================
+   EDITOR IMAGE SELECTION
+================================================== */
+
+.rich-text-editor .tiptap img.ProseMirror-selectednode {
+  outline:
+    2px solid
+    rgba(102, 182, 255, 0.75);
+
+  outline-offset: 4px;
+
+  border-radius: 12px;
+}
+
+.image-remove-button {
+  color: #6f859e;
+}
+
+.image-remove-button.active {
+  color: #ff8d9d;
+
+  border-color:
+    rgba(255, 100, 120, 0.24);
+
+  background:
+    rgba(255, 100, 120, 0.04);
+}
+
+.image-remove-button.active:hover {
+  color: #ffb0ba;
+
+  border-color:
+    rgba(255, 100, 120, 0.4);
+}

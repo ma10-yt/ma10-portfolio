@@ -440,119 +440,179 @@ function Admin() {
      SAVE POST
   ================================================== */
 
-  const handleSavePost =
-    async (event) => {
-      event.preventDefault();
+  const handleSavePost = async (event) => {
+  event.preventDefault();
 
-      setSavingPost(true);
-      setPostMessage('');
+  setSavingPost(true);
+  setPostMessage('');
 
-      if (!title.trim()) {
-        setPostMessage(
-          'Please enter a title.'
-        );
+  if (!title.trim()) {
+    setPostMessage(
+      'Please enter a title.'
+    );
 
-        setSavingPost(false);
+    setSavingPost(false);
+    return;
+  }
 
-        return;
-      }
+  if (!slug.trim()) {
+    setPostMessage(
+      'Please enter a slug.'
+    );
 
-      if (!slug.trim()) {
-        setPostMessage(
-          'Please enter a slug.'
-        );
+    setSavingPost(false);
+    return;
+  }
 
-        setSavingPost(false);
+  if (!content.trim()) {
+    setPostMessage(
+      'Please write some content.'
+    );
 
-        return;
-      }
+    setSavingPost(false);
+    return;
+  }
 
-      if (!content.trim()) {
-        setPostMessage(
-          'Please write some content.'
-        );
+  const payload = {
+    title: title.trim(),
+    slug: slug.trim(),
+    content: content.trim(),
+    published,
+  };
 
-        setSavingPost(false);
+  let result;
 
-        return;
-      }
+  /*
+   * EDITING AN EXISTING POST
+   */
+  if (editingPostId) {
+    /*
+     * First get the old version so we can
+     * identify images that were removed.
+     */
+    const {
+      data: oldPost,
+      error: oldPostError,
+    } = await supabase
+      .from('posts')
+      .select('content')
+      .eq('id', editingPostId)
+      .single();
 
-      const payload = {
-        title:
-          title.trim(),
-
-        slug:
-          slug.trim(),
-
-        content:
-          content.trim(),
-
-        published,
-      };
-
-      let result;
-
-      if (
-        editingPostId
-      ) {
-        result =
-          await supabase
-            .from('posts')
-            .update(
-              payload
-            )
-            .eq(
-              'id',
-              editingPostId
-            );
-      } else {
-        result =
-          await supabase
-            .from('posts')
-            .insert({
-              ...payload,
-
-              author_id:
-                session.user.id,
-            });
-      }
-
-      if (result.error) {
-        console.error(
-          result.error
-        );
-
-        if (
-          result.error.code ===
-          '23505'
-        ) {
-          setPostMessage(
-            'That slug is already being used.'
-          );
-        } else {
-          setPostMessage(
-            result.error.message ||
-              'Something went wrong while saving the post.'
-          );
-        }
-
-        setSavingPost(false);
-
-        return;
-      }
+    if (oldPostError) {
+      console.error(oldPostError);
 
       setPostMessage(
-        editingPostId
-          ? 'Post updated successfully.'
-          : 'Post created successfully.'
+        'Could not prepare the post for editing.'
       );
 
-      resetEditor();
+      setSavingPost(false);
+      return;
+    }
 
-      await loadPosts();
+    const oldImagePaths =
+      extractImagePaths(
+        oldPost?.content
+      );
+
+    /*
+     * Update the post.
+     */
+    result = await supabase
+      .from('posts')
+      .update(payload)
+      .eq('id', editingPostId);
+
+    if (result.error) {
+      console.error(result.error);
+
+      setPostMessage(
+        result.error.message ||
+          'Something went wrong while updating the post.'
+      );
 
       setSavingPost(false);
-    };
+      return;
+    }
+
+    /*
+     * Find images that existed before but no
+     * longer exist in the edited post.
+     */
+    const newImagePaths =
+      new Set(
+        extractImagePaths(
+          payload.content
+        )
+      );
+
+    const removedImages =
+      oldImagePaths.filter(
+        (path) =>
+          !newImagePaths.has(path)
+      );
+
+    /*
+     * Delete removed images only when they are
+     * not used by any other post.
+     */
+    await cleanupUnusedImages(
+      removedImages
+    );
+  }
+
+  /*
+   * CREATING A NEW POST
+   */
+  else {
+    result = await supabase
+      .from('posts')
+      .insert({
+        ...payload,
+        author_id:
+          session.user.id,
+      });
+
+    if (result.error) {
+      console.error(result.error);
+
+      if (
+        result.error.code ===
+        '23505'
+      ) {
+        setPostMessage(
+          'That slug is already being used.'
+        );
+      } else {
+        setPostMessage(
+          result.error.message ||
+            'Something went wrong while creating the post.'
+        );
+      }
+
+      setSavingPost(false);
+      return;
+    }
+  }
+
+  /*
+   * SUCCESS
+   */
+  setPostMessage(
+    editingPostId
+      ? 'Post updated successfully.'
+      : 'Post created successfully.'
+  );
+
+  resetEditor();
+
+  await Promise.all([
+    loadPosts(),
+    loadComments(),
+  ]);
+
+  setSavingPost(false);
+};
 
   /* ==================================================
      EDIT POST
@@ -592,55 +652,258 @@ function Admin() {
      DELETE POST
   ================================================== */
 
-  const handleDelete = async (
-    postId
-  ) => {
-    const confirmed =
-      window.confirm(
-        'Are you sure you want to permanently delete this post?'
+  /* ==================================================
+   IMAGE CLEANUP HELPERS
+================================================== */
+
+const extractImagePaths = (html) => {
+  if (!html) {
+    return [];
+  }
+
+  const container =
+    document.createElement('div');
+
+  container.innerHTML = html;
+
+  return [
+    ...new Set(
+      Array.from(
+        container.querySelectorAll('img')
+      )
+        .map((image) => {
+          const src =
+            image.getAttribute('src');
+
+          if (!src) {
+            return null;
+          }
+
+          try {
+            const url =
+              new URL(src);
+
+            const pathname =
+              url.pathname;
+
+            const marker =
+              '/storage/v1/object/public/blog-images/';
+
+            const index =
+              pathname.indexOf(
+                marker
+              );
+
+            if (index === -1) {
+              return null;
+            }
+
+            return decodeURIComponent(
+              pathname.slice(
+                index +
+                  marker.length
+              )
+            );
+          } catch {
+            return null;
+          }
+        })
+        .filter(Boolean)
+    ),
+  ];
+};
+
+
+const cleanupUnusedImages = async (
+  candidatePaths
+) => {
+  const candidates = [
+    ...new Set(
+      candidatePaths.filter(
+        Boolean
+      )
+    ),
+  ];
+
+  if (
+    candidates.length === 0
+  ) {
+    return;
+  }
+
+  const {
+    data: remainingPosts,
+    error: postsError,
+  } =
+    await supabase
+      .from('posts')
+      .select(
+        'id, content'
       );
 
-    if (!confirmed) {
-      return;
-    }
-
-    const {
-      error,
-    } =
-      await supabase
-        .from('posts')
-        .delete()
-        .eq(
-          'id',
-          postId
-        );
-
-    if (error) {
-      console.error(error);
-
-      setPostMessage(
-        'Could not delete the post.'
-      );
-
-      return;
-    }
-
-    if (
-      editingPostId ===
-      postId
-    ) {
-      resetEditor();
-    }
-
-    setPostMessage(
-      'Post deleted successfully.'
+  if (postsError) {
+    console.error(
+      'Could not inspect posts for image cleanup:',
+      postsError
     );
 
-    await Promise.all([
-      loadPosts(),
-      loadComments(),
-    ]);
-  };
+    return;
+  }
+
+  const stillUsed =
+    new Set();
+
+  (
+    remainingPosts || []
+  ).forEach((post) => {
+    extractImagePaths(
+      post.content
+    ).forEach((path) => {
+      stillUsed.add(path);
+    });
+  });
+
+  const unusedPaths =
+    candidates.filter(
+      (path) =>
+        !stillUsed.has(path)
+    );
+
+  if (
+    unusedPaths.length === 0
+  ) {
+    console.log(
+      'All candidate images are still used somewhere.'
+    );
+
+    return;
+  }
+
+  console.log(
+    'Removing unused blog images:',
+    unusedPaths
+  );
+
+  const {
+    error:
+      storageError,
+  } =
+    await supabase.storage
+      .from('blog-images')
+      .remove(
+        unusedPaths
+      );
+
+  if (storageError) {
+    console.error(
+      'Image cleanup failed:',
+      storageError
+    );
+
+    setPostMessage(
+      `Post saved, but image cleanup failed: ${storageError.message}`
+    );
+  }
+};
+
+  const handleDelete = async (
+  postId
+) => {
+  const confirmed =
+    window.confirm(
+      'Are you sure you want to permanently delete this post?'
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  /*
+   * Get the post first so we know which images
+   * might become unused.
+   */
+  const {
+    data: postToDelete,
+    error: fetchError,
+  } =
+    await supabase
+      .from('posts')
+      .select(
+        'id, content'
+      )
+      .eq(
+        'id',
+        postId
+      )
+      .single();
+
+  if (fetchError) {
+    console.error(
+      fetchError
+    );
+
+    setPostMessage(
+      'Could not load the post before deleting it.'
+    );
+
+    return;
+  }
+
+  const imagePaths =
+    extractImagePaths(
+      postToDelete?.content
+    );
+
+  /*
+   * Delete the post first.
+   */
+  const {
+    error,
+  } =
+    await supabase
+      .from('posts')
+      .delete()
+      .eq(
+        'id',
+        postId
+      );
+
+  if (error) {
+    console.error(
+      error
+    );
+
+    setPostMessage(
+      'Could not delete the post.'
+    );
+
+    return;
+  }
+
+  /*
+   * Now clean images that are no longer
+   * referenced by ANY remaining post.
+   */
+  await cleanupUnusedImages(
+    imagePaths
+  );
+
+  if (
+    editingPostId ===
+    postId
+  ) {
+    resetEditor();
+  }
+
+  setPostMessage(
+    'Post and unused images deleted successfully.'
+  );
+
+  await Promise.all([
+    loadPosts(),
+    loadComments(),
+  ]);
+};
 
   /* ==================================================
      APPROVE COMMENT
