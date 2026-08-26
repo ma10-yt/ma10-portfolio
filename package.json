@@ -6,13 +6,24 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "@marsidev/react-turnstile": "^1.6.0",
+    "@supabase/supabase-js": "^2.112.4",
+    "@tiptap/extension-image": "^3.30.5",
+    "@tiptap/pm": "^3.30.5",
+    "@tiptap/react": "^3.30.5",
+    "@tiptap/starter-kit": "^3.30.5",
     "@vitejs/plugin-react": "latest",
-    "vite": "latest",
     "react": "latest",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "react-router-dom": "^7.18.2",
+    "vite": "latest"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
+  }
 }
