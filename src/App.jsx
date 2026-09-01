@@ -25,13 +25,14 @@ const projects = [
     github: 'https://github.com/ma10-yt/AR-Writing',
   },
   {
-    number: '02',
-    title: 'Recipe AI',
-    category: 'AI APPLICATION',
-    tech: 'Python · Streamlit · Gemini API',
-    description:
-      'An AI-powered recipe application using Gemini to assist with recipe-related tasks and generate useful responses.',
-    github: null,
+   number: '02',
+   category: 'AI / ML',
+   title: 'AI Recipe Generator',
+   tech: 'Python · Streamlit',
+   description:
+    'An AI-powered recipe generator built with Python and Streamlit.',
+   github:
+    'https://github.com/ma10-yt/ai-recipe-generator',
   },
   {
     number: '03',
