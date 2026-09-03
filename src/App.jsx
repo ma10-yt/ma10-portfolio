@@ -31,8 +31,7 @@ const projects = [
    tech: 'Python · Streamlit',
    description:
     'An AI-powered recipe generator built with Python and Streamlit.',
-   github:
-    'https://github.com/ma10-yt/ai-recipe-generator',
+   github: 'https://github.com/ma10-yt/ai-recipe-generator',
   },
   {
     number: '03',
@@ -41,7 +40,7 @@ const projects = [
     tech: 'Python · Automation',
     description:
       'A personal voice assistant built to interact with the computer through voice commands and perform useful tasks.',
-    github: null,
+    github: 'https://github.com/ma10-yt/friday',
   },
 ];
 
