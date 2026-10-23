@@ -17,6 +17,8 @@ import {
   Turnstile,
 } from '@marsidev/react-turnstile';
 
+import { SiteFooter, SiteHeader } from '../components/SiteChrome';
+
 const reactionTypes = [
   {
     type: 'like',
@@ -817,10 +819,13 @@ const [
 
   if (loading) {
     return (
-      <div className="site-shell">
-        <main className="blog-post-loading">
-          Loading article...
+      <div className="site-shell editorial-site">
+        <SiteHeader current="blog" />
+        <main className="blog-post-loading" role="status">
+          <span className="state-spinner" />
+          <span>Opening the article...</span>
         </main>
+        <SiteFooter />
       </div>
     );
   }
@@ -830,19 +835,21 @@ const [
     !post
   ) {
     return (
-      <div className="site-shell">
+      <div className="site-shell editorial-site">
+        <SiteHeader current="blog" />
         <main className="blog-post-loading">
           <h1>
             Article not found.
           </h1>
 
           <Link
-            className="blog-read"
+            className="editorial-read-link"
             to="/blog"
           >
             ← Back to blog
           </Link>
         </main>
+        <SiteFooter />
       </div>
     );
   }
@@ -854,41 +861,8 @@ const [
    */
 
   return (
-    <div className="site-shell">
-      <div className="ambient ambient-one" />
-      <div className="ambient ambient-two" />
-      <div className="ambient ambient-three" />
-
-      <div className="grid-overlay" />
-      <div className="noise-overlay" />
-
-      <header className="nav container">
-        <Link
-          className="brand"
-          to="/"
-        >
-          <span className="brand-mark">
-            MA
-          </span>
-
-          <span>
-            10
-          </span>
-        </Link>
-
-        <nav
-          className="nav-links"
-          aria-label="Article navigation"
-        >
-          <Link to="/blog">
-            Blog
-          </Link>
-
-          <Link to="/">
-            Home
-          </Link>
-        </nav>
-      </header>
+    <div className="site-shell editorial-site">
+      <SiteHeader current="blog" />
 
       <main>
         <article className="container blog-post-page">
@@ -1248,24 +1222,7 @@ const [
         </article>
       </main>
 
-      <footer className="footer container">
-        <span>
-          © 2026 Mehran Mushtaq / MA10
-        </span>
-
-        <div className="footer-right">
-          <span>
-            Built while learning.
-          </span>
-
-          <Link
-            className="footer-admin-link"
-            to="/admin"
-          >
-            Admin
-          </Link>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
