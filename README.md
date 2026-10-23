@@ -108,6 +108,12 @@ git push origin main
 
 GitHub Actions automatically builds and deploys the site to GitHub Pages.
 
+## Custom domain setup (when ready)
+
+The Vite build uses relative asset paths, so the same build supports the current `/ma10-portfolio/` GitHub Pages URL and a custom domain at the site root. No domain name or `CNAME` file is set in this repository.
+
+When you are ready to connect your domain, first verify it with GitHub, then enter it under **Repository Settings → Pages → Custom domain**. Configure the matching DNS records with your domain provider using GitHub's instructions for your domain type, then wait for DNS to propagate and enable **Enforce HTTPS** when GitHub offers it. Because this repository deploys with a custom GitHub Actions workflow, GitHub does not require a committed `CNAME` file for the Pages deployment.
+
 ## Environment Variables
 
 The following frontend environment variables are required:

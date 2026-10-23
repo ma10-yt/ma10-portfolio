@@ -1191,7 +1191,7 @@ const cleanupUnusedImages = async (
 
   if (!session) {
     return (
-      <div className="site-shell">
+      <div className="site-shell admin-site">
         <div className="ambient ambient-one" />
         <div className="ambient ambient-two" />
         <div className="grid-overlay" />
@@ -1344,7 +1344,7 @@ const cleanupUnusedImages = async (
 
   if (loadingDashboard) {
     return (
-      <div className="site-shell">
+      <div className="site-shell admin-site">
         <div className="ambient ambient-one" />
         <div className="ambient ambient-two" />
         <div className="ambient ambient-three" />
@@ -1372,7 +1372,7 @@ const cleanupUnusedImages = async (
   ================================================== */
 
   return (
-    <div className="site-shell">
+    <div className="site-shell admin-site">
       <div className="ambient ambient-one" />
       <div className="ambient ambient-two" />
       <div className="ambient ambient-three" />
@@ -1385,13 +1385,7 @@ const cleanupUnusedImages = async (
           className="brand"
           href="#/"
         >
-          <span className="brand-mark">
-            MA
-          </span>
-
-          <span>
-            10
-          </span>
+          <span className="admin-wordmark">MA10</span>
         </a>
 
         <div className="admin-nav-right">
