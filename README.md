@@ -6,7 +6,7 @@ A modern portfolio built with React and Vite, with a custom blog system powered 
 
 ## Live Website
 
-https://ma10-yt.github.io/ma10-portfolio/
+https://ma10.tech/
 
 ## Features
 
